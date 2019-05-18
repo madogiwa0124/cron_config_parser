@@ -34,7 +34,7 @@ module CronConfigParser
 
     attr_reader :minutes, :hours, :days, :months, :wdays, :timezone
 
-    # difine properties configured check methods
+    # define properties configured check methods
     [:minutes, :hours, :days, :months, :wdays, :timezone].each do |attr|
       define_method("#{attr}_configured?") do
         value = send(attr).class == Array ? send(attr)[0] : send(attr)

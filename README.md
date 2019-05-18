@@ -37,9 +37,9 @@ enable check configured properties.
 ``` ruby
 # return false if configured nil or '*'
 config = CronConfigParser::Parser.call('00 5 * * * Asia/Tokyo')
-config.minutes_difined?
+config.minutes_configured?
 => true
-config.days_difined?
+config.days_configured?
 => false
 ```
 
