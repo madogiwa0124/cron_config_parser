@@ -43,6 +43,14 @@ config.days_configured?
 => false
 ```
 
+enable check next execute time.
+
+``` ruby
+config = CronConfigParser::Parser.call('00 5 * * * Asia/Tokyo')
+config.next_execute_at
+=> 2019-05-23 05:00:00 +0900
+```
+
 This gem check simple validation when CronConfigParser::CronConfig object initialize.
 If the config is invalid, Config::SyntaxError or Config::RequiredError is raised.
 
