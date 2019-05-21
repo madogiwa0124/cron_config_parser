@@ -53,7 +53,7 @@ RSpec.describe CronConfigParser do
         it 'raise ConfigRequiredError' do
           expect {
             CronConfigParser::CronConfig.new(config)
-          }.to raise_error CronConfigParser::ConfigRequiredError
+          }.to raise_error CronConfigParser::Varidator::ConfigRequiredError
         end
       end
 
@@ -63,7 +63,7 @@ RSpec.describe CronConfigParser do
         it 'raise ConfigSyntaxError' do
           expect {
             CronConfigParser::CronConfig.new(config)
-          }.to raise_error CronConfigParser::ConfigSyntaxError
+          }.to raise_error CronConfigParser::Varidator::ConfigSyntaxError
         end
       end
 
