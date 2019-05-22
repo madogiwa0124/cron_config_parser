@@ -2,6 +2,12 @@ require "cron_config_parser/version"
 require 'active_support/all'
 
 module CronConfigParser
+  def self.call(cron_config, validation: true)
+    Parser.call(cron_config, validation: true)
+  end
+
+  private
+
   class Parser
     def self.call(cron_config, validation: true)
       new(cron_config, validation: validation).call

@@ -19,10 +19,10 @@ Or install it yourself as:
 
 ## Usage
 
-You can parse the cron configuration for readability with `CronConfigParser::Parser.call`.
+You can parse the cron configuration for readability with `CronConfigParser.call`.
 
 ``` ruby
-CronConfigParser::Parser.call('00 5 * * * Asia/Tokyo')
+CronConfigParser.call('00 5 * * * Asia/Tokyo')
 => #<CronConfigParser::CronConfig:0x00007fa4f492e820
  @days=["*"],
  @hours=["5"],
@@ -36,7 +36,7 @@ enable check configured properties.
 
 ``` ruby
 # return false if configured nil or '*'
-config = CronConfigParser::Parser.call('00 5 * * * Asia/Tokyo')
+config = CronConfigParser.call('00 5 * * * Asia/Tokyo')
 config.minutes_configured?
 => true
 config.days_configured?
@@ -46,7 +46,7 @@ config.days_configured?
 enable check next execute time.
 
 ``` ruby
-config = CronConfigParser::Parser.call('00 5 * * * Asia/Tokyo')
+config = CronConfigParser.call('00 5 * * * Asia/Tokyo')
 config.next_execute_at
 => 2019-05-23 05:00:00 +0900
 ```
@@ -56,15 +56,15 @@ If the config is invalid, Config::SyntaxError or Config::RequiredError is raised
 
 ``` ruby
 # not configured require property.
-CronConfigParser::Parser.call('00 5,13 * * ')
+CronConfigParser.call('00 5,13 * * ')
 => CronConfigParser::ConfigRequiredError
 
 # configured invalid property.
-CronConfigParser::Parser.call('00 5,a * * * Asia/Tokyo')
+CronConfigParser.call('00 5,a * * * Asia/Tokyo')
 => CronConfigParser::ConfigSyntaxError
 
 # this check is Invalidationable.
-CronConfigParser::Parser.call('00 5,a * * * Asia/Tokyo', validation: false)
+CronConfigParser.call('00 5,a * * * Asia/Tokyo', validation: false)
 => #<CronConfigParser::CronConfig:0x00007fcedf09cdf0
  @days=["*"],
  @hours=["5", "a"],

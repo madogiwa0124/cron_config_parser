@@ -3,6 +3,14 @@ RSpec.describe CronConfigParser do
     expect(CronConfigParser::VERSION).not_to be nil
   end
 
+  describe '.call' do
+    let(:result) { CronConfigParser.call('00 5 * * * Asia/Tokyo') }
+
+    it 'return CronConfig object.' do
+      expect(result.class).to eq CronConfigParser::CronConfig
+    end
+  end
+
   describe 'Parser' do
     describe '.call' do
       let(:result) { CronConfigParser::Parser.call('00 5 * * * Asia/Tokyo') }
