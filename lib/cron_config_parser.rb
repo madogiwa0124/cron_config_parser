@@ -181,58 +181,57 @@ module CronConfigParser
 
     def next_hour
       return unless cron_config.hours_configured?
-      # reset hour if configured cron hour
-      @execute_at = @execute_at.change(hour: basis_datetime.hour) if @execute_at.hour >= basis_datetime.hour
       next_hour = cron_config.hours.select { |config_hour| config_hour > execute_at.hour }.first
       check_hash = { hour: next_hour.presence || cron_config.hours[0], min: execute_at.min }
+
       # Do not change the time if it is a future time or other than the specified value
       if cron_config.hours.exclude?(execute_at.hour) || changed_basis_datetime_future?(check_hash)
         @execute_at = change_to_property_and_move_up(property: next_hour, property_sym: :hours)
         # reset minute when execute in freture and not configured minute
-        @execute_at = @execute_at.change(min: 0) unless cron_config.minutes_configured?
+        reset_execute_at(min: 0)
       end
     end
 
     def next_day
       return unless cron_config.days_configured?
-      # reset hour if configured cron hour
-      @execute_at = @execute_at.change(hour: basis_datetime.hour) if @execute_at.hour >= basis_datetime.hour
       next_day = cron_config.days.select { |config_day| config_day >= execute_at.day }.first
       check_hash = { day: next_day.presence || cron_config.days[0], hour: execute_at.hour, min: execute_at.min }
+
       # Do not change the time if it is a future time or other than the specified value
       if cron_config.days.exclude?(execute_at.day) || changed_basis_datetime_future?(check_hash)
         @execute_at = change_to_property_and_move_up(property: next_day, property_sym: :days)
         # reset minute when execute in freture and not configured minute, hour
-        @execute_at = @execute_at.change(min: 0) unless cron_config.minutes_configured?
-        @execute_at = @execute_at.change(hour: 0) unless cron_config.minutes_configured?
+        reset_execute_at(min: 0, hour: 0)
       end
     end
 
     def next_wday
       return unless cron_config.wdays_configured?
-      @execute_at = @execute_at.change(hour: basis_datetime.hour) if @execute_at.hour >= basis_datetime.hour
       next_wday = cron_config.wdays.select { |config_wday| config_wday > execute_at.wday }.first
       next_wday_sym = next_wday ? WDAYS[next_wday] : WDAYS[cron_config.wdays.first]
       @execute_at = execute_at.next_occurring(next_wday_sym)
       # reset minute when execute in freture and not configured minute, hour
-      @execute_at = @execute_at.change(min: 0) unless cron_config.minutes_configured?
-      @execute_at = @execute_at.change(hour: 0) unless cron_config.minutes_configured?
+      reset_execute_at(min: 0, hour: 0)
     end
 
     def next_month
       return unless cron_config.months_configured?
-      @execute_at = @execute_at.change(hour: basis_datetime.hour) if @execute_at.hour >= basis_datetime.hour
       next_month = cron_config.months.select { |config_month| config_month >= execute_at.month }.first
       check_next_month = next_month.presence || cron_config.months[0]
       check_hash = { month: check_next_month, day: execute_at.day, hour: execute_at.hour, min: execute_at.min }
+
       # Do not change the time if it is a future time or other than the specified value
       if cron_config.months.exclude?(execute_at.month) || changed_basis_datetime_future?(check_hash)
         @execute_at = change_to_property_and_move_up(property: next_month, property_sym: :months)
         # reset minute when execute in freture and not configured minute, hour, day
-        @execute_at = @execute_at.change(min: 0) unless cron_config.minutes_configured?
-        @execute_at = @execute_at.change(hour: 0) unless cron_config.hours_configured?
-        @execute_at = @execute_at.change(day: 1) unless cron_config.days_configured?
+        reset_execute_at(min: 0, hour: 0, day: 1)
       end
+    end
+
+    def reset_execute_at(min: execute_at.min, hour: execute_at.hour, day: execute_at.day)
+      @execute_at = @execute_at.change(min: min) unless cron_config.minutes_configured?
+      @execute_at = @execute_at.change(hour: hour) unless cron_config.hours_configured?
+      @execute_at = @execute_at.change(day: day) unless cron_config.days_configured?
     end
 
     def changed_basis_datetime_future?(check_hash)
