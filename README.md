@@ -85,6 +85,8 @@ CronConfigParser.call('00 5,a * * * Asia/Tokyo', validation: false)
 
 ## Code Status
 
+[![Gem Version](https://badge.fury.io/rb/cron_config_parser.svg)](https://badge.fury.io/rb/cron_config_parser)
+
 [![Build Status](https://travis-ci.com/Madogiwa0124/cron_config_parser.svg?branch=master)](https://travis-ci.com/Madogiwa0124/cron_config_parser)
 
 ## Contributing
