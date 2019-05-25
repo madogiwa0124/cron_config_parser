@@ -83,6 +83,10 @@ CronConfigParser.call('00 5,a * * * Asia/Tokyo', validation: false)
  @wdays=["*"]>
 ```
 
+## Code Status
+
+[![Build Status](https://travis-ci.com/Madogiwa0124/cron_config_parser.svg?branch=master)](https://travis-ci.com/Madogiwa0124/cron_config_parser)
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/Madogiwa0124/cron_config_parser. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
