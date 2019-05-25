@@ -85,11 +85,77 @@ RSpec.describe CronConfigParser do
       end
     end
 
-    describe '#next_execute_at' do
-      let(:result) { object.next_execute_at(basis_datetime: basis_datetime) }
+    describe '#execute_schedule' do
       let(:now) { Time.current }
 
+      describe 'argument execute_count' do
+        let(:basis_datetime) { Time.new(now.year, 5, 27, 0, 0) }
+        let(:object) { CronConfigParser::CronConfig.new('*/10 * * * * Asia/Tokyo') }
+
+        context 'not configured argument' do
+          let(:result) { object.execute_schedule(basis_datetime: basis_datetime) }
+
+          it 'return first next execute at' do
+            expect(result).to eq [{ execute_at: basis_datetime.change(min: 10), annotation: '' }]
+          end
+        end
+
+        context 'execute_count >= 2' do
+          let(:result) { object.execute_schedule(basis_datetime: basis_datetime, execute_count: 3) }
+          it 'return first to third next execute at' do
+            expect(result).to eq [
+              { execute_at: basis_datetime.change(min: 10), annotation: '' },
+              { execute_at: basis_datetime.change(min: 20), annotation: '' },
+              { execute_at: basis_datetime.change(min: 30), annotation: ''}
+            ]
+          end
+        end
+      end
+
+      describe 'argument annotation' do
+        let(:basis_datetime) { Time.new(now.year, 5, 27, 0, 0) }
+        let(:object) { CronConfigParser::CronConfig.new('*/10 * * * * Asia/Tokyo') }
+
+        context 'not configured argument' do
+          let(:result) { object.execute_schedule(basis_datetime: basis_datetime) }
+          it 'return first next execute at' do
+            expect(result).to eq [ {execute_at: basis_datetime.change(min: 10), annotation: ''} ]
+          end
+        end
+
+        context 'configured annotation' do
+          let(:result) { object.execute_schedule(basis_datetime: basis_datetime, annotation: 'Hoge') }
+          it 'return first next execute at with annotation' do
+            expect(result).to eq [ {execute_at: basis_datetime.change(min: 10), annotation: 'Hoge' } ]
+          end
+        end
+      end
+    end
+
+    describe '#next_execute_at' do
+      let(:now) { Time.current }
+
+      describe 'edge setting' do
+        let(:result) { object.next_execute_at(basis_datetime: basis_datetime) }
+
+        context 'configured: 00 12 1,2 1,2,3 *' do
+          let(:object) { CronConfigParser::CronConfig.new('00 12 1,2 1,2,3 *') }
+
+          context 'first' do
+            let(:basis_datetime) { "2020-01-01 12:00".in_time_zone }
+            it { expect(result).to eq "2020-01-02 12:00".in_time_zone }
+          end
+
+          context 'second' do
+            let(:basis_datetime) { "2020-01-02 12:00".in_time_zone }
+            it { expect(result).to eq "2020-02-01 12:00".in_time_zone }
+          end
+        end
+      end
+
       describe 'common setting' do
+        let(:result) { object.next_execute_at(basis_datetime: basis_datetime) }
+
         context 'every 10 minutes: */10 * * * * Asia/Tokyo' do
           let(:object) { CronConfigParser::CronConfig.new('*/10 * * * * Asia/Tokyo') }
 
@@ -148,6 +214,8 @@ RSpec.describe CronConfigParser do
       end
 
       describe 'minutes' do
+        let(:result) { object.next_execute_at(basis_datetime: basis_datetime) }
+
         context 'not configured' do
           let(:basis_datetime) { Time.new(now.year, now.month, now.day, now.hour, now.min) }
           let(:object) { CronConfigParser::CronConfig.new('* * * * * Asia/Tokyo') }
@@ -239,6 +307,8 @@ RSpec.describe CronConfigParser do
       end
 
       describe 'hours' do
+        let(:result) { object.next_execute_at(basis_datetime: basis_datetime) }
+
         context 'single hour' do
           let(:object) { CronConfigParser::CronConfig.new('* 5 * * * Asia/Tokyo') }
 
@@ -301,6 +371,8 @@ RSpec.describe CronConfigParser do
       end
 
       describe 'days' do
+        let(:result) { object.next_execute_at(basis_datetime: basis_datetime) }
+
         context 'single day' do
           let(:object) { CronConfigParser::CronConfig.new('* * 15 * * Asia/Tokyo') }
 
@@ -308,15 +380,15 @@ RSpec.describe CronConfigParser do
             let(:basis_datetime) { Time.new(now.year, now.month, 14, now.hour, now.min) }
 
             it 'return configured day time' do
-              expect(result).to eq basis_datetime.change(day: 15, min: 0)
+              expect(result).to eq basis_datetime.change(day: 15, hour: 0, min: 0)
             end
           end
 
           context 'move up' do
-            let(:basis_datetime) { Time.new(now.year, now.month, 15, now.hour, now.min) }
+            let(:basis_datetime) { Time.new(now.year, now.month, 15, 23, 59) }
 
             it 'return since month and configured day time' do
-              expect(result).to eq basis_datetime.since(1.month).change(day: 15, min: 0)
+              expect(result).to eq basis_datetime.since(1.month).change(day: 15, hour:0, min: 0)
             end
           end
 
@@ -327,15 +399,15 @@ RSpec.describe CronConfigParser do
               let(:basis_datetime) { Time.new(now.year, now.month, 14, now.hour, now.min) }
 
               it 'return fitst configured day time' do
-                expect(result).to eq basis_datetime.change(day: 15, min: 0)
+                expect(result).to eq basis_datetime.change(day: 15, hour: 0, min: 0)
               end
             end
 
             context 'basis_datetime day after first configured day' do
-              let(:basis_datetime) { Time.new(now.year, now.month, 15, now.hour, now.min) }
+              let(:basis_datetime) { Time.new(now.year, now.month, 15, 23, 59) }
 
               it 'return since 1hour and configured minute time' do
-                expect(result).to eq basis_datetime.change(day: 20, min: 0)
+                expect(result).to eq basis_datetime.change(day: 20, hour: 0, min: 0)
               end
             end
           end
@@ -343,6 +415,8 @@ RSpec.describe CronConfigParser do
       end
 
       describe 'wdays' do
+        let(:result) { object.next_execute_at(basis_datetime: basis_datetime) }
+
         context 'single wday' do
           let(:object) { CronConfigParser::CronConfig.new('* * * * 6 Asia/Tokyo') }
 
@@ -350,7 +424,7 @@ RSpec.describe CronConfigParser do
             let(:basis_datetime) { Time.new(2019, 5, 20, now.hour, now.min) }
 
             it 'return configured day time' do
-              expect(result).to eq basis_datetime.change(day: 25, min: 0)
+              expect(result).to eq basis_datetime.change(day: 25, hour: 0, min: 0)
             end
           end
         end
@@ -362,7 +436,7 @@ RSpec.describe CronConfigParser do
             let(:basis_datetime) { Time.new(2019, 5, 19, now.hour, now.min) }
 
             it 'return fitst configured wday time' do
-              expect(result).to eq basis_datetime.change(day: 20, min: 0)
+              expect(result).to eq basis_datetime.change(day: 20, hour: 0, min: 0)
             end
           end
 
@@ -370,13 +444,15 @@ RSpec.describe CronConfigParser do
             let(:basis_datetime) { Time.new(2019, 5, 20, now.hour, now.min) }
 
             it 'return second configured minute time' do
-              expect(result).to eq basis_datetime.change(day: 25, min: 0)
+              expect(result).to eq basis_datetime.change(day: 25, hour:0, min: 0)
             end
           end
         end
       end
 
       describe 'month' do
+        let(:result) { object.next_execute_at(basis_datetime: basis_datetime) }
+
         context 'single month' do
           let(:object) { CronConfigParser::CronConfig.new('* * * 9 * Asia/Tokyo') }
 
@@ -384,15 +460,15 @@ RSpec.describe CronConfigParser do
             let(:basis_datetime) { Time.new(now.year, 8, now.day, now.hour, now.min) }
 
             it 'return configured month time' do
-              expect(result).to eq basis_datetime.change(month: 9, min: 0)
+              expect(result).to eq basis_datetime.change(month: 9, day: 1, hour: 0, min: 0)
             end
           end
 
           context 'move up' do
-            let(:basis_datetime) { Time.new(now.year, 9, now.day, now.hour, now.min) }
+            let(:basis_datetime) { Time.new(now.year, 9, 30, 23, 59) }
 
             it 'return since year and configured month time' do
-              expect(result).to eq basis_datetime.since(1.year).change(month: 9, min: 0)
+              expect(result).to eq basis_datetime.since(1.year).change(month: 9, day: 1, hour: 0, min: 0)
             end
           end
 
@@ -403,15 +479,15 @@ RSpec.describe CronConfigParser do
               let(:basis_datetime) { Time.new(now.year, 8, now.day, now.hour, now.min) }
 
               it 'return first configured month time' do
-                expect(result).to eq basis_datetime.change(month: 9, min: 0)
+                expect(result).to eq basis_datetime.change(month: 9, day: 1, hour: 0, min: 0)
               end
             end
 
             context 'basis_datetime month after first configured month' do
-              let(:basis_datetime) { Time.new(now.year, 9, now.day, now.hour, now.min) }
+              let(:basis_datetime) { Time.new(now.year, 9, 30, 23, 59) }
 
               it 'return since year and configured month time' do
-                expect(result).to eq basis_datetime.change(month: 12, min: 0)
+                expect(result).to eq basis_datetime.change(month: 12, day: 1, hour: 0, min: 0)
               end
             end
           end
