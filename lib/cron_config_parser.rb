@@ -134,14 +134,30 @@ module CronConfigParser
 
     def call
       next_minute
+      return execute_at if returnable?
       next_hour
+      return execute_at if returnable?
       next_day
+      return execute_at if returnable?
       next_wday
+      return execute_at if returnable?
       next_month
       execute_at
     end
 
     private
+
+    # check calculated next execution date by below conditions
+    # 1.execute_at is future.(remove default add 1 minutes)
+    # 2.propaty is not configured or propaty include configured values.
+    def returnable?
+      execute_at.ago(1.minute) > basis_datetime \
+      && (!cron_config.minutes_configured? || cron_config.minutes.include?(execute_at.min)) \
+      && (!cron_config.hours_configured? || cron_config.hours.include?(execute_at.hour)) \
+      && (!cron_config.days_configured? || cron_config.days.include?(execute_at.day)) \
+      && (!cron_config.wdays_configured? || cron_config.wdays.include?(execute_at.wday)) \
+      && (!cron_config.months_configured? || cron_config.months.include?(execute_at.month))
+    end
 
     def prepare_cron_config
       @cron_config.minutes = parse_config_property(:minutes)
@@ -241,10 +257,16 @@ module CronConfigParser
     def change_to_property_and_move_up(property:, property_sym:)
       change_property = convert_hash(property_sym)[:change_property]
       move_up_property = convert_hash(property_sym)[:move_up_property]
-      return execute_at.change(change_property => property) if property
-      execute_at.since(1.send(move_up_property)).change(
-        change_property => cron_config.send(property_sym).first
-      )
+      if property
+        if change_property == :hour && cron_config.minutes_configured?
+          return execute_at.change(hour: property, min: execute_at.min)
+        end
+        execute_at.change(change_property => property)
+      else
+        execute_at.since(1.send(move_up_property)).change(
+          change_property => cron_config.send(property_sym).first
+        )
+      end
     end
 
     def convert_hash(property_sym)

@@ -151,6 +151,20 @@ RSpec.describe CronConfigParser do
             it { expect(result).to eq "2020-02-01 12:00".in_time_zone }
           end
         end
+
+        context 'configured: 00,30 0-6 * * *' do
+          let(:object) { CronConfigParser::CronConfig.new('00,30 0-6 * * *') }
+
+          context 'first' do
+            let(:basis_datetime) { "2019-05-26 01:00".in_time_zone }
+            it { expect(result).to eq "2019-05-26 01:30".in_time_zone }
+          end
+
+          context 'second' do
+            let(:basis_datetime) { "2019-05-26 01:30".in_time_zone }
+            it { expect(result).to eq "2019-05-26 02:00".in_time_zone }
+          end
+        end
       end
 
       describe 'common setting' do
@@ -188,13 +202,13 @@ RSpec.describe CronConfigParser do
           let(:object) { CronConfigParser::CronConfig.new('* * * * 1 Asia/Tokyo') }
 
           context 'first' do
-            let(:basis_datetime) { Time.new(now.year, 5, 20, 0, 0) }
-            it { expect(result).to eq basis_datetime.change(day: 27) }
+            let(:basis_datetime) { Time.new(now.year, 5, 20, 23, 59) }
+            it { expect(result).to eq basis_datetime.change(day: 27, hour: 0, min: 0) }
           end
 
           context 'second' do
-            let(:basis_datetime) { Time.new(now.year, 5, 27, 0, 0) }
-            it { expect(result).to eq basis_datetime.change(month: 6, day: 3) }
+            let(:basis_datetime) { Time.new(now.year, 5, 27, 23, 59) }
+            it { expect(result).to eq basis_datetime.change(month: 6, day: 3, hour: 0, min: 0) }
           end
         end
 
